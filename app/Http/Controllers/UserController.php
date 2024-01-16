@@ -4,14 +4,12 @@ namespace App\Http\Controllers;
 
 use Intervention\Image\ImageManager;
 use Intervention\Image\Drivers\Gd\Driver;
-// use Intervention\Image\Facades\Image;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Carbon\Carbon;
 use Session;
-use Image;
 use Auth;
 
 class UserController extends Controller{
@@ -44,14 +42,14 @@ class UserController extends Controller{
             'password'=>'required|min:8',
             'confirm_password'=>'required_with:password|same:password',
             'username'=>'required',
-            'role'=>'required',
+            // 'role'=>'required',
         ],[
             'name.required'=>'Please enter your name',
             'email.required'=>'Please enter your email',
             'password.required'=>'Please enter password',
             'confirm_password.required'=>'Please enter your confirm password', 
             'username.required'=>'Please enter your confirm password', 
-            'role.required'=>'Please select your role', 
+            // 'role.required'=>'Please select your role', 
         ]);
 
         $slug='U'.uniqid('20');
@@ -62,15 +60,18 @@ class UserController extends Controller{
             'email'=>$request['email'],
             'username'=>$request['username'],
             'password'=>Hash::make($request['password']),
-            'role'=>$request['role'],
+            // 'role'=>$request['role'],
             'slug'=>$slug,
             'created_at'=>Carbon::now('asia/dhaka')->toDateTimeString(),
         ]);
 
         if($request->hasfile('pic')){
+            $manager = new ImageManager(new Driver());
             $image = $request->file('pic');
-            $imageName = 'user_'.$insert.'_'.time().'.'.$image->getClientOriginalName(); 
-            Image::make($image)->save(base_path('public/uploads/users/'.$imageName));
+            $imageName = 'user_'.time().'.'.$image->getClientOriginalName(); 
+            $image = $manager->read($image);
+            $image = $image->resize(300,300);
+            $image->save('uploads/user/'.$imageName);
 
             User::where('id',$insert)->update([
                 'photo' => $imageName,
